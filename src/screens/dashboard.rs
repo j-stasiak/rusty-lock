@@ -1,4 +1,9 @@
-use crate::app::Screen;
+use std::{cell::RefCell, ffi::OsStr, rc::Rc};
+
+use crate::{
+    app::Screen,
+    message_bus::{Message, MessageBus},
+};
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::{
     prelude::*,
@@ -33,11 +38,13 @@ struct PasswordList {
 
 pub struct Dashboard {
     password_list: PasswordList,
+    message_bus: Rc<RefCell<MessageBus>>,
 }
 
 impl Dashboard {
-    pub fn new() -> Self {
+    pub fn new(message_bus: Rc<RefCell<MessageBus>>) -> Self {
         let dashboard = Dashboard {
+            message_bus,
             password_list: PasswordList {
                 items: vec![
                     PasswordListItem {
@@ -84,20 +91,25 @@ impl Dashboard {
                     GlobalUnlock(h_glob);
 
                     // Set the clipboard data
-                    if SetClipboardData(1, HANDLE(h_glob.0)).is_ok() {
-                        CloseClipboard();
-                        return;
-                    }
+                    SetClipboardData(1, HANDLE(h_glob.0));
                 }
                 GlobalFree(h_glob);
                 CloseClipboard();
             }
         }
     }
+
+    fn load_passwords_from_file(&self, file_path: &str, login: String, password: String) {
+        todo!("Implement file loading...");
+    }
 }
 
 impl Screen for Dashboard {
-    fn handle_events(&mut self, event: crossterm::event::Event, _state: &mut crate::app::AppState) {
+    fn handle_terminal_events(
+        &mut self,
+        event: crossterm::event::Event,
+        _state: &mut crate::app::AppState,
+    ) {
         match event {
             Event::Key(key) if key.kind == KeyEventKind::Press => match key.code {
                 KeyCode::Down => self.select_next(),
@@ -177,9 +189,9 @@ impl Screen for Dashboard {
                 "<Down> ".bold(),
                 "Select below / ".into(),
                 "<Up> ".bold(),
-                "Select above /".into(),
+                "Select above / ".into(),
                 "<C> ".bold(),
-                "Copy selected /".into(),
+                "Copy selected / ".into(),
                 "<N> ".bold(),
                 "Add new".into(),
             ])
@@ -188,5 +200,15 @@ impl Screen for Dashboard {
         .block(Block::default().borders(Borders::ALL))
         .alignment(Alignment::Center)
         .render(layout_parts[2], buf);
+    }
+
+    fn handle_messages(&mut self, messages: Vec<Message>, state: &mut crate::app::AppState) {
+        for message in messages {
+            match message {
+                Message::LoginCredentials(login, password) => {
+                    self.load_passwords_from_file("", login, password)
+                }
+            }
+        }
     }
 }

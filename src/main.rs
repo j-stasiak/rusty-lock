@@ -1,5 +1,6 @@
 pub mod app;
 pub mod components;
+pub mod message_bus;
 pub mod screens;
 
 use app::App;
