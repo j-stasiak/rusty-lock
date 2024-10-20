@@ -1,5 +1,5 @@
 use crossterm::event;
-use ratatui::{buffer::Buffer, layout::Rect, DefaultTerminal};
+use ratatui::{buffer::Buffer, layout::Rect, DefaultTerminal, Frame};
 use std::{collections::HashMap, fmt::Debug, io};
 
 use crate::screens::{dashboard::Dashboard, welcome_screen::WelcomeScreen};
@@ -16,7 +16,7 @@ pub enum AppState {
 }
 pub trait Screen {
     fn handle_events(&mut self, event: event::Event, state: &mut AppState);
-    fn render(&mut self, area: Rect, buf: &mut Buffer);
+    fn render(&mut self, frame: &mut Frame);
 }
 
 pub struct App {
@@ -32,7 +32,7 @@ impl App {
         };
 
         app.screens_map
-            .insert(AppState::WelcomeScreen, Box::new(WelcomeScreen {}));
+            .insert(AppState::WelcomeScreen, Box::new(WelcomeScreen::new()));
 
         app.screens_map
             .insert(AppState::Dashboard, Box::new(Dashboard::new()));
@@ -49,7 +49,7 @@ impl App {
                 .expect("No screen for state")
                 .as_mut();
 
-            terminal.draw(|frame| screen.render(frame.area(), frame.buffer_mut()))?;
+            terminal.draw(|frame| screen.render(frame))?;
 
             let ev = event::read()?;
             screen.handle_events(ev, &mut self.state);

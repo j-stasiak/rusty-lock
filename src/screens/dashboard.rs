@@ -121,7 +121,10 @@ impl Screen for Dashboard {
         }
     }
 
-    fn render(&mut self, area: ratatui::prelude::Rect, buf: &mut ratatui::prelude::Buffer) {
+    fn render(&mut self, frame: &mut Frame) {
+        let area = frame.area();
+        let buf = frame.buffer_mut();
+
         let title = Title::from(" List of passwords ".bold());
         let block = Block::bordered()
             .title(title.alignment(Alignment::Center))

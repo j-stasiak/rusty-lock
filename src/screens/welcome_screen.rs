@@ -10,10 +10,35 @@ use crate::{
     components::input_field::{InputField, InputFieldState},
 };
 
-pub struct WelcomeScreen {}
+pub struct WelcomeScreen {
+    login_input: InputField,
+    password_input: InputField,
+}
+
+impl WelcomeScreen {
+    pub fn new() -> Self {
+        let mut login_input = InputField::default();
+        login_input.state = InputFieldState::Active;
+        login_input.label = "Login";
+
+        let mut password_input = InputField::default();
+        password_input.label = "Password";
+        password_input.hide_value = true;
+
+        let screen = WelcomeScreen {
+            login_input,
+            password_input,
+        };
+
+        screen
+    }
+}
 
 impl Screen for WelcomeScreen {
-    fn render(&mut self, area: Rect, buf: &mut Buffer) {
+    fn render(&mut self, frame: &mut Frame) {
+        let area = frame.area();
+        let buf = frame.buffer_mut();
+
         // Implement rendering logic
         let title = Title::from("Welcome to the App".bold());
         let block = Block::bordered()
@@ -46,21 +71,13 @@ impl Screen for WelcomeScreen {
             .constraints([Constraint::Length(5), Constraint::Length(5)])
             .split(layout_parts[1]);
 
-        let mut login_input = InputField::default();
-        login_input.state = InputFieldState::Active;
-        login_input.label = "Login";
-
         let login_area = Rect::new(
             input_area[0].x + input_area[0].width / 3,
             input_area[0].y,
             input_area[0].width / 3,
             input_area[0].height,
         );
-        login_input.render(login_area, buf);
-
-        let mut password_input = InputField::default();
-        password_input.label = "Password";
-        password_input.hide_value = true;
+        self.login_input.render(login_area, buf);
 
         let password_area = Rect::new(
             input_area[1].x + input_area[1].width / 3,
@@ -68,7 +85,13 @@ impl Screen for WelcomeScreen {
             input_area[1].width / 3,
             input_area[1].height,
         );
-        password_input.render(password_area, buf);
+        self.password_input.render(password_area, buf);
+
+        for input in [&self.login_input, &self.password_input].iter() {
+            if let Some(position) = input.cursor_position {
+                frame.set_cursor_position(position);
+            }
+        }
     }
 
     fn handle_events(&mut self, event: event::Event, state: &mut AppState) {
