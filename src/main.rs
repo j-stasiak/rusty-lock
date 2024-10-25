@@ -1,5 +1,6 @@
 pub mod app;
 pub mod components;
+pub mod crypto_utils;
 pub mod message_bus;
 pub mod screens;
 

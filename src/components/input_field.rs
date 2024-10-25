@@ -1,5 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Padding, Paragraph, Widget};
+use secrecy::zeroize::Zeroize;
 use symbols::border;
 
 #[derive(PartialEq, Copy, Clone)]
@@ -45,8 +46,7 @@ impl Widget for &mut InputField {
         let block = Block::bordered()
             .padding(Padding::new(2, 2, 1, 0))
             .border_set(border::ROUNDED)
-            .title(label)
-            .style(Style::default().bg(Color::DarkGray));
+            .title(label);
 
         if self.cursor_position.is_none() && self.state == InputFieldState::Active {
             self.cursor_position = Some(Position::new(area.x + 3, area.y + 2));
@@ -63,11 +63,21 @@ impl Widget for &mut InputField {
         Paragraph::new(display_value)
             .block(block)
             .alignment(Alignment::Left)
+            .style(Style::default().bg(Color::DarkGray))
             .render(area, buf);
     }
 }
 
 impl InputField {
+    pub fn clear_value(&mut self) {
+        if self.hide_value {
+            self.value.zeroize();
+        }
+        self.value.clear();
+        self.cursor_index = 0;
+        self.cursor_position = None;
+    }
+
     pub fn get_value(&self) -> String {
         self.value.clone()
     }

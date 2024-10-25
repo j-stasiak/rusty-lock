@@ -55,6 +55,10 @@ impl WelcomeScreen {
                         self.login_input.get_value(),
                         self.password_input.get_value(),
                     ));
+
+                self.login_input.clear_value();
+                self.password_input.clear_value();
+
                 *state = AppState::Dashboard
             }
         }
